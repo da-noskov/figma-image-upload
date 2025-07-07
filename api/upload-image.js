@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -10,20 +10,23 @@ export default async function handler(req, res) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  const file = req.body;
+  const { file } = req.body;
 
   if (!file) {
     return res.status(400).json({ error: 'No file provided' });
   }
 
   const fileName = req.headers['x-file-name'] || 'figma-image.png';
+  
+  // Загружаем файл из base64
+  const buffer = Buffer.from(file, 'base64');
 
   const { data, error } = await supabase.storage
     .from('figma-images')
-    .upload(fileName, Buffer.from(file, 'base64'), { upsert: true });
+    .upload(fileName, buffer, { upsert: true });
 
   if (error) {
-    return res.status(500).json({ error });
+    return res.status(500).json({ error: error.message });
   }
 
   const publicUrl = supabase.storage
